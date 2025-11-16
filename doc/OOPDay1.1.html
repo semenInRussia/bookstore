@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OOPMKN</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h2 id="практическое-задание-№1.-рефакторинг-процедурного-кода-в-объектно-ориентированный-стиль"><strong>Практическое задание №1. Рефакторинг процедурного кода в объектно-ориентированный стиль</strong></h2>
+<h3 id="цель-работы"><strong>Цель работы:</strong></h3>
+<p>Закрепить понимание основных принципов ООП — <strong>инкапсуляции, свойств, конструкторов и индексаторов</strong>, — на примере преобразования «устаревшего» кода, написанного с использованием статических методов, в полноценную объектную архитектуру на языке C#.</p>
+<hr>
+<h3 id="исходная-ситуация"><strong>Исходная ситуация</strong></h3>
+<p>Вам дан упрощённый вариант приложения <strong>«Книжная лавка»</strong>, написанный в процедурном стиле.<br>
+Программа использует <strong>глобальный список книг</strong> и набор <strong>public static методов</strong>, которые работают с ним напрямую:</p>
+<pre class=" language-csharp"><code class="prism  language-csharp"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">BookStoreApp</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> List<span class="token operator">&lt;</span>Dictionary<span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">object</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span> Books <span class="token operator">=</span> <span class="token keyword">new</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">AddBook</span><span class="token punctuation">(</span><span class="token keyword">string</span> isbn<span class="token punctuation">,</span> <span class="token keyword">string</span> title<span class="token punctuation">,</span> <span class="token keyword">string</span> author<span class="token punctuation">,</span> <span class="token keyword">double</span> price<span class="token punctuation">,</span> <span class="token keyword">int</span> stock<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        Books<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Dictionary</span><span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">object</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
+            <span class="token punctuation">[</span><span class="token string">"isbn"</span><span class="token punctuation">]</span> <span class="token operator">=</span> isbn<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">"title"</span><span class="token punctuation">]</span> <span class="token operator">=</span> title<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">"author"</span><span class="token punctuation">]</span> <span class="token operator">=</span> author<span class="token punctuation">,</span>
+            <span class="token punctuation">[</span><span class="token string">"price"</span><span class="token punctuation">]</span> <span class="token operator">=</span> price<span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">"stock"</span><span class="token punctuation">]</span> <span class="token operator">=</span> stock
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> Dictionary<span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">object</span><span class="token operator">&gt;</span><span class="token operator">?</span> <span class="token function">GetByIsbn</span><span class="token punctuation">(</span><span class="token keyword">string</span> isbn<span class="token punctuation">)</span>
+        <span class="token operator">=</span><span class="token operator">&gt;</span> Books<span class="token punctuation">.</span><span class="token function">FirstOrDefault</span><span class="token punctuation">(</span>b <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">)</span>b<span class="token punctuation">[</span><span class="token string">"isbn"</span><span class="token punctuation">]</span> <span class="token operator">==</span> isbn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">SetPrice</span><span class="token punctuation">(</span><span class="token keyword">string</span> isbn<span class="token punctuation">,</span> <span class="token keyword">double</span> newPrice<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">var</span> b <span class="token operator">=</span> <span class="token function">GetByIsbn</span><span class="token punctuation">(</span>isbn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>b <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> b<span class="token punctuation">[</span><span class="token string">"price"</span><span class="token punctuation">]</span> <span class="token operator">=</span> newPrice<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">Rent</span><span class="token punctuation">(</span><span class="token keyword">string</span> isbn<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">var</span> b <span class="token operator">=</span> <span class="token function">GetByIsbn</span><span class="token punctuation">(</span>isbn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>b <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> b<span class="token punctuation">[</span><span class="token string">"stock"</span><span class="token punctuation">]</span> <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">Max</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span>b<span class="token punctuation">[</span><span class="token string">"stock"</span><span class="token punctuation">]</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">Return</span><span class="token punctuation">(</span><span class="token keyword">string</span> isbn<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">var</span> b <span class="token operator">=</span> <span class="token function">GetByIsbn</span><span class="token punctuation">(</span>isbn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>b <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> b<span class="token punctuation">[</span><span class="token string">"stock"</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span>b<span class="token punctuation">[</span><span class="token string">"stock"</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">foreach</span> <span class="token punctuation">(</span><span class="token keyword">var</span> b <span class="token keyword">in</span> Books<span class="token punctuation">)</span>
+            Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"{b["</span>isbn<span class="token string">"]} | {b["</span>title<span class="token string">"]} | {b["</span>author<span class="token string">"]} | {(double)b["</span>price<span class="token string">"]:0.00} | stock={(int)b["</span>stock<span class="token string">"]}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+</code></pre>
+<p>Такой код <strong>работает</strong>, но <strong>не отражает</strong> принципы объектно-ориентированного проектирования:</p>
+<ul>
+<li>
+<p>отсутствует инкапсуляция данных;</p>
+</li>
+<li>
+<p>данные хранятся в словарях без строгой структуры;</p>
+</li>
+<li>
+<p>поведение и данные не объединены в едином объекте;</p>
+</li>
+<li>
+<p>логика разрознена по статическим методам.</p>
+</li>
+</ul>
+<hr>
+<h3 id="задача">Задача</h3>
+<p>Преобразовать данный код в <strong>ООП-версию</strong> с корректным разделением ответственности между классами и объектами.</p>
+<hr>
+<h4 id="создайте-класс-book">1. <strong>Создайте класс <code>Book</code></strong></h4>
+<ul>
+<li>
+<p>Реализуйте <strong>поля и свойства</strong>:<br>
+<code>Isbn</code>, <code>Title</code>, <code>Author</code>, <code>Price</code>, <code>Stock</code>.</p>
+</li>
+<li>
+<p>Все поля должны быть <strong>инкапсулированы</strong> (private).</p>
+</li>
+<li>
+<p>Доступ к ним осуществляется через <strong>свойства</strong> с валидацией:</p>
+<ul>
+<li>
+<p><code>Price &gt;= 0</code>,</p>
+</li>
+<li>
+<p><code>Stock &gt;= 0</code>.<br>
+При нарушении — выбрасывать <code>ArgumentOutOfRangeException</code>.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Добавьте <strong>конструктор</strong> с параметрами (isbn, title, author, price, stock).</p>
+</li>
+<li>
+<p>Реализуйте методы:</p>
+<ul>
+<li>
+<p><code>Rent()</code> — уменьшает остаток на 1 (если книги есть в наличии);</p>
+</li>
+<li>
+<p><code>Return()</code> — увеличивает остаток на 1;</p>
+</li>
+<li>
+<p><code>Reprice(double newPrice)</code> — изменяет цену с проверкой.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Добавьте <strong>вычисляемое свойство</strong> <code>IsAvailable</code>, которое возвращает <code>true</code>, если <code>Stock &gt; 0</code>.</p>
+</li>
+<li>
+<p>Переопределите <code>ToString()</code> для удобного вывода информации о книге.</p>
+</li>
+</ul>
+<hr>
+<h4 id="создайте-класс-catalog">2. <strong>Создайте класс <code>Catalog</code></strong></h4>
+<ul>
+<li>
+<p>Храните коллекцию книг в <code>Dictionary&lt;string, Book&gt;</code>.</p>
+</li>
+<li>
+<p>Реализуйте методы:</p>
+<ul>
+<li>
+<p><code>Add(Book book)</code> — добавляет книгу (ISBN должен быть уникален);</p>
+</li>
+<li>
+<p><code>Remove(string isbn)</code> — удаляет книгу;</p>
+</li>
+<li>
+<p><code>Contains(string isbn)</code> — проверяет наличие книги.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Добавьте <strong>индексаторы</strong>:</p>
+<ul>
+<li>
+<p><code>this[string isbn]</code> — возвращает книгу по ISBN (или выбрасывает <code>KeyNotFoundException</code>);</p>
+</li>
+<li>
+<p><code>this[int index]</code> — возвращает книгу по порядковому номеру (или выбрасывает <code>IndexOutOfRangeException</code>).</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Сделайте коллекцию <strong>доступной только для чтения</strong> снаружи (<code>IReadOnlyCollection&lt;Book&gt;</code>).</p>
+</li>
+<li>
+<p>Добавить возможность получать <em>n</em>-ю книгу по имени автора с помощью перегруженного индексатора:</p>
+<pre class=" language-csharp"><code class="prism  language-csharp">catalog<span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">"Robert C. Martin"</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">]</span>
+
+</code></pre>
+</li>
+</ul>
+<h2 id="🔍-теоретическая-справка-индексаторы-в-c">🔍 Теоретическая справка: индексаторы в C#</h2>
+<p><strong>Индексаторы</strong> позволяют обращаться к элементам объекта <strong>так же, как к элементам массива или словаря</strong>, но при этом скрывать внутреннюю реализацию.<br>
+Они задаются с помощью ключевого слова <code>this</code>, принимают параметры и возвращают значение, связанное с этими параметрами.</p>
+<p>Пример простого индексатора:</p>
+<pre class=" language-csharp"><code class="prism  language-csharp"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Example</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token keyword">string</span><span class="token punctuation">[</span><span class="token punctuation">]</span> names <span class="token operator">=</span> <span class="token punctuation">{</span> <span class="token string">"Alice"</span><span class="token punctuation">,</span> <span class="token string">"Bob"</span><span class="token punctuation">,</span> <span class="token string">"Charlie"</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">string</span> <span class="token keyword">this</span><span class="token punctuation">[</span><span class="token keyword">int</span> index<span class="token punctuation">]</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">get</span> <span class="token operator">=</span><span class="token operator">&gt;</span> names<span class="token punctuation">[</span>index<span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">set</span> <span class="token operator">=</span><span class="token operator">&gt;</span> names<span class="token punctuation">[</span>index<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">value</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Использование:</p>
+<pre class=" language-csharp"><code class="prism  language-csharp"><span class="token keyword">var</span> ex <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Example</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>ex<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// Alice</span>
+ex<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"Boris"</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Таким образом, индексаторы:</p>
+<ul>
+<li>делают код <strong>читабельным и естественным</strong> (как при работе с коллекцией);</li>
+<li>позволяют <strong>инкапсулировать структуру хранения</strong>;</li>
+<li>могут быть <strong>перегружены</strong> — с разными типами параметров.</li>
+</ul>
+<p>В данном проекте <code>Catalog</code> реализует <strong>три индексатора</strong>:</p>
+<ol>
+<li><code>catalog[string isbn]</code> — доступ к книге по ISBN;</li>
+<li><code>catalog[int index]</code> — доступ к книге по порядку;</li>
+<li><code>catalog[(string author, int index)]</code> — доступ к <em>n</em>-й книге автора.</li>
+</ol>
+<hr>
+<h4 id="создайте-класс-bookstore">3. <strong>Создайте класс <code>BookStore</code></strong></h4>
+<ul>
+<li>
+<p>Содержит объект <code>Catalog</code>.</p>
+</li>
+<li>
+<p>Реализует методы работы с книгами:</p>
+<ul>
+<li>
+<p><code>Rent(string isbn)</code> — вызывает у книги метод <code>Catalog[isbn].Rent()</code>;</p>
+</li>
+<li>
+<p><code>Return(string isbn)</code> — вызывает <code>Catalog[isbn].Return()</code>;</p>
+</li>
+<li>
+<p><code>SetPrice(string isbn, double price)</code> — изменяет цену;</p>
+</li>
+<li>
+<p><code>PrintCatalog()</code> — выводит все книги на экран.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>В коде <strong>не должно остаться public static методов</strong> (допускаются только статические константы).</p>
+</li>
+</ul>
+<hr>
+<h3 id="пример-использования-вашего-ооп-дизайна"><strong>Пример использования вашего ООП-дизайна</strong></h3>
+<pre class=" language-csharp"><code class="prism  language-csharp">        <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">Main</span><span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span>
+        <span class="token punctuation">{</span>
+           <span class="token keyword">try</span>
+           <span class="token punctuation">{</span>
+               <span class="token comment">// Создание каталога и добавление книг</span>
+               <span class="token keyword">var</span> catalog <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Catalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               catalog<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Book</span><span class="token punctuation">(</span><span class="token string">"978-5-4461-0923-5"</span><span class="token punctuation">,</span> <span class="token string">"CLR via C#"</span><span class="token punctuation">,</span> <span class="token string">"Jeffrey Richter"</span><span class="token punctuation">,</span> <span class="token number">55.0</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               catalog<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Book</span><span class="token punctuation">(</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">,</span> <span class="token string">"Clean Code"</span><span class="token punctuation">,</span> <span class="token string">"Robert C. Martin"</span><span class="token punctuation">,</span> <span class="token number">48.5</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               catalog<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Book</span><span class="token punctuation">(</span><span class="token string">"978-1-1188-9912-4"</span><span class="token punctuation">,</span> <span class="token string">"C# in Depth"</span><span class="token punctuation">,</span> <span class="token string">"Jon Skeet"</span><span class="token punctuation">,</span> <span class="token number">52.9</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Создание магазина</span>
+               <span class="token keyword">var</span> store <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BookStore</span><span class="token punctuation">(</span>catalog<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"=== Каталог при запуске ==="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Работа с индексатором по строке (ISBN)</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nПроверим книгу по ISBN:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               <span class="token keyword">var</span> book <span class="token operator">=</span> catalog<span class="token punctuation">[</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Найдена книга: {book.Title} — Автор: {book.Author}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Аренда книги</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nАренда книги 'Clean Code'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">Rent</span><span class="token punctuation">(</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Попытка арендовать снова (вызовет исключение)</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nПопытка снова арендовать 'Clean Code':"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               <span class="token keyword">try</span>
+               <span class="token punctuation">{</span>
+                   store<span class="token punctuation">.</span><span class="token function">Rent</span><span class="token punctuation">(</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               <span class="token punctuation">}</span>
+               <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span>
+               <span class="token punctuation">{</span>
+                   Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Ошибка: {ex.Message}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               <span class="token punctuation">}</span>
+
+               <span class="token comment">// Возврат книги</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nВозврат книги 'Clean Code'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">Return</span><span class="token punctuation">(</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Изменение цены</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nИзменение цены книги 'C# in Depth'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">SetPrice</span><span class="token punctuation">(</span><span class="token string">"978-1-1188-9912-4"</span><span class="token punctuation">,</span> <span class="token number">59.9</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Проверка индексатора по номеру</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nКнига с индексом [0]:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>catalog<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+               <span class="token comment">// Удаление книги</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nУдаление книги 'CLR via C#'"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               catalog<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span><span class="token string">"978-5-4461-0923-5"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+               store<span class="token punctuation">.</span><span class="token function">PrintCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+				<span class="token comment">//// --- Тест индексаторов ---</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\n=== Проверка индексаторов ==="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+				<span class="token comment">// 1. Индексатор по строке (ISBN)</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"Поиск книги по ISBN:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token keyword">var</span> cleanCode <span class="token operator">=</span> catalog<span class="token punctuation">[</span><span class="token string">"978-0-1347-0779-3"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>cleanCode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+				<span class="token comment">// 2. Индексатор по числу</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nКнига с индексом [1]:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>catalog<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+				<span class="token comment">// 3. Индексатор по кортежу (Автор + номер)</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nПервая книга Роберта Мартина:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token keyword">try</span>
+				<span class="token punctuation">{</span>
+				    <span class="token keyword">var</span> bookByAuthor <span class="token operator">=</span> catalog<span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">"Robert C. Martin"</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+				    Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>bookByAuthor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token punctuation">}</span>
+				<span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span>
+				<span class="token punctuation">{</span>
+				    Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Ошибка при обращении по кортежу: {ex.Message}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token punctuation">}</span>
+
+				<span class="token comment">// 4. Попытка выхода за границы</span>
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nПроверка исключения для несуществующего индекса:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token keyword">try</span>
+				<span class="token punctuation">{</span>
+				    Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>catalog<span class="token punctuation">[</span><span class="token number">10</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token punctuation">}</span>
+				<span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span>
+				<span class="token punctuation">{</span>
+				    Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Ожидаемая ошибка: {ex.Message}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+				<span class="token punctuation">}</span>
+
+				Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nПроверка завершена успешно."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+           <span class="token punctuation">}</span>
+           <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span>
+           <span class="token punctuation">{</span>
+               Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Глобальная ошибка: {ex.Message}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+           <span class="token punctuation">}</span>
+
+           Console<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"\nРабота программы завершена."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token punctuation">}</span>
+
+<span class="token punctuation">}</span>
+
+
+</code></pre>
+<hr>
+<p><img src="https://img.plantuml.biz/plantuml/png/ZLRTRXD75BxtKunovT0Ow6qQBCnF9QiLGJXt5KBZtOapodh6sXqRN1J9a58gWOY4k41S5AbFO086azJnAyo-0a_IxypkUdVjogqj_vtvpZdV-PbpV3qoF3JzRb0nqWI2sNTsPgVsCzx7yGcpvtPiJ-sP7RDlepVC_edd-ngEHl4pEusVseazYv_6n_48YAgTsulu2NGc3899_1kKSGpX23PdzgCTRrOgqQ5KFHxoBeiEkAyVIjLX-po8HE6anxr3tX4jCmIdK7Y6gqvG17W1ZwA6CQ5izureUbgrvA-2NIr00gc46VO4qw4vq9LAQfDjtD3wi6LqA3ROuqg59ROOITdEZb18nB1Unn73eyOUz4Bf2RRDVDrlWqCgZOps3Y6LoYIYclluZZMZje8y0ZK4zfXrX657wTcUot7vy0S61mDk18iAo4OVdCF_1RrRuhSEsSevhuCreyQ0ou2t7TUsra4fZ4MabB6gHBWPootccYZ_oLqK-M-Noepf5dCvT7GsKvFtaFxg9hmEjFGNCjCFrQhK6QigyV1kqUeAJF6kG-qLgIsXzdJBYPsJ186JexmvRdB30zr1VuIYfoE9xYdrY3IY6q7tblICr8g7mvqiPifIFSFfq1TKrPzbP594lPpKcxgFwXHgbBU4xrTH32ICJAx4sTK3KQh6PbgyXM5bk5JHEamZ25mAchTLloj2we2T0l-CepcGqIz5C_TPGgfqhdpnoCLHE3qgtpTt2v7KVUvnNnGJwgK9tyvIlvIbvUEbN2sCLrD32s2fqvPJiTfrQn0jOLpdBLs1tffk15wPb4YneLrQyeHSgjKA4MBwNjY_QRRQBvYvl-Dr0dW6q01lV7_vygMDP8H1OMm_qlp5l9tYym83VEoc-gG2HqhZkeUoSs2Oti_gOjy2S4fp7J20CTDVR4F-RVHNEb_grzZLhNI2q7UdX65_Pi_ZL_5pU9iHiKof4NRGGShizitk_ZrCRt7xaITwT3cOdPCRvbRC2BlZZqIPHDDb6iG-DTbK0nv8VxU7nYGxAmQJuR75i7be2KrJjjU8hL0-eyZJ-DlQ6Dsb1EJjPT_J5eFxAMszB91cwyOT5XyxWbY3jDpiZDdJnEd4Vi8ByFWPrMaCmWIve5MN6h2leJj1a6JXAuC2TYJjJ3k7IbBTSsVsZ6eBsYxgy_Wb7RaiiVYvMxL93TDgVN8QJvnFBDYyNldjp2wdMzqbltEod9OkFYufkclhRYsfaGf2-a190QDP_89Yc3kF9x19x4yJOS71VpJ7Js9uHviVCUdyl8XNK62u_fU6AHJlEhxIdvL_0000" alt=""></p>
+<h2 id="🧾-контрольные-вопросы">🧾 Контрольные вопросы</h2>
+<h3 id="️⃣-общие-вопросы">1️⃣ Общие вопросы</h3>
+<ol>
+<li>
+<p>Почему изначально в проекте использовались <code>public static</code> методы и чем это удобно на раннем этапе разработки?</p>
+</li>
+<li>
+<p>Какие недостатки имеет такой подход при расширении функциональности приложения?</p>
+</li>
+<li>
+<p>Что изменилось после рефакторинга в отношении <strong>хранения данных</strong> и <strong>обработки состояния</strong>?</p>
+</li>
+<li>
+<p>Каким образом классы <code>Book</code>, <code>Catalog</code> и <code>BookStore</code> взаимодействуют между собой после перехода на ООП?</p>
+</li>
+</ol>
+<hr>
+<h3 id="️⃣-работа-с-книгами">2️⃣ Работа с книгами</h3>
+<ol start="5">
+<li>
+<p>В старом коде книга хранилась как <code>Dictionary&lt;string, object&gt;</code>. Какие риски или неудобства это создаёт?</p>
+</li>
+<li>
+<p>Как в новой версии кода обеспечивается защита данных книги от некорректных значений (<code>price</code>, <code>stock</code>)?</p>
+</li>
+<li>
+<p>Что произойдёт, если попытаться установить отрицательную цену или арендовать книгу при <code>Stock == 0</code>?</p>
+</li>
+<li>
+<p>Где и как реализована логика валидации этих состояний после рефакторинга?</p>
+</li>
+</ol>
+<hr>
+<h3 id="️⃣-конструкторы-и-свойства">3️⃣ Конструкторы и свойства</h3>
+<ol start="9">
+<li>
+<p>Как создавалась книга <strong>до рефакторинга</strong>? Приведите пример вызова метода.</p>
+</li>
+<li>
+<p>Как создаётся книга <strong>после рефакторинга</strong>? В чём отличие по смыслу и синтаксису?</p>
+</li>
+<li>
+<p>В чём преимущество инициализации данных через <strong>конструктор</strong> по сравнению с передачей параметров в <code>AddBook()</code>?</p>
+</li>
+<li>
+<p>Почему в классе <code>Book</code> не стоит делать поля <code>public</code> даже для простых данных вроде <code>Title</code> или <code>Price</code>?</p>
+</li>
+</ol>
+<hr>
+<h3 id="️⃣-инкапсуляция">4️⃣ Инкапсуляция</h3>
+<ol start="13">
+<li>
+<p>Как в старом коде можно было случайно «сломать» данные книги?</p>
+</li>
+<li>
+<p>Почему в новой версии невозможно напрямую изменить <code>Stock</code> извне?</p>
+</li>
+<li>
+<p>Как методы <code>Rent()</code> и <code>Return()</code> реализуют <strong>инкапсуляцию инвариантов</strong> (сохраняют корректность состояния)?</p>
+</li>
+<li>
+<p>Что произойдёт, если удалить эти методы и сделать <code>Stock</code> публичным свойством без проверки?</p>
+</li>
+</ol>
+<hr>
+<h3 id="️⃣-индексаторы-и-коллекции">5️⃣ Индексаторы и коллекции</h3>
+<ol start="17">
+<li>
+<p>Как в старой версии выполнялся поиск книги по ISBN?</p>
+</li>
+<li>
+<p>Как теперь выполняется тот же поиск, и почему это решение считается более читаемым и безопасным?</p>
+</li>
+<li>
+<p>Зачем в <code>Catalog</code> добавлены <strong>два индексатора</strong> — по <code>isbn</code> и по <code>int index</code>?</p>
+</li>
+<li>
+<p>Как можно использовать индексаторы для обхода всех книг без раскрытия внутренней структуры коллекции?</p>
+</li>
+</ol>
+<hr>
+<h3 id="️⃣-расширяемость-и-сопровождение">6️⃣ Расширяемость и сопровождение</h3>
+<ol start="21">
+<li>
+<p>Как добавить новую операцию (например, скидку на все книги определённого автора) в старом коде?</p>
+</li>
+<li>
+<p>Как реализовать ту же задачу после рефакторинга?</p>
+</li>
+<li>
+<p>Что изменится, если завтра нужно будет добавить новый тип товара — например, «аудиокнига» с дополнительным свойством <code>Duration</code>?</p>
+</li>
+<li>
+<p>В каком варианте проще тестировать отдельные элементы логики (например, только класс <code>Book</code>)? Почему?</p>
+</li>
+</ol>
+</div>
+</body>
+
+</html>
