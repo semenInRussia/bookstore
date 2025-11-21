@@ -3,8 +3,8 @@ namespace Bookstore;
 public class Book
 {
   // private fields
-  private double? price;
-  private int? stock;
+  private double price;
+  private int stock;
 
   // access to them via properties
   public string Isbn { get; private set; }
@@ -15,7 +15,7 @@ public class Book
 
   public double Price
   {
-    get => price!.Value;
+    get => price;
     private set
     {
       price = value;
@@ -28,7 +28,7 @@ public class Book
 
   public int Stock
   {
-    get => stock!.Value;
+    get => stock;
     private set
     {
       stock = value;

@@ -9,6 +9,10 @@ public class Catalog : IReadOnlyCollection<Book>
 
   public void Add(Book b)
   {
+    if (Contains(b.Isbn))
+    {
+      return;
+    }
     _items[b.Isbn] = b;
     _order.Add(b.Isbn);
   }
