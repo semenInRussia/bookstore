@@ -1,8 +1,8 @@
 namespace Bookstore;
 
-public class BookStore(Catalog catalog)
+public class BookStore(Catalog _catalog)
 {
-  private readonly Catalog catalog = catalog;
+  private readonly Catalog catalog = _catalog;
 
   public void Rent(string isbn)
   {
